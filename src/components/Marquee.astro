@@ -1,0 +1,25 @@
+---
+interface Props {
+  text: string;
+  variant?: "magenta" | "neon" | "outline";
+  repeat?: number;
+}
+
+const { text, variant = "magenta", repeat = 10 } = Astro.props;
+
+const variantClasses: Record<string, string> = {
+  magenta: "bg-magenta text-ink",
+  neon: "bg-neon text-ink",
+  outline: "bg-ink text-paper border-y border-paper/20",
+};
+---
+
+<div class:list={["overflow-hidden py-3", variantClasses[variant]]}>
+  <div class="flex marquee-track whitespace-nowrap">
+    {
+      Array.from({ length: repeat }).map(() => (
+        <span class="font-display text-3xl md:text-5xl uppercase mx-6 tracking-tight">{text}</span>
+      ))
+    }
+  </div>
+</div>

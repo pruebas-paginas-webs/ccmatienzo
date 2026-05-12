@@ -1,0 +1,64 @@
+---
+import { contact, site } from "../data/content";
+---
+
+<footer class="relative bg-ink border-t border-paper/10 mt-32">
+  <!-- Marquee -->
+  <div class="overflow-hidden border-b border-paper/10 py-4 bg-magenta">
+    <div class="flex marquee-track whitespace-nowrap">
+      {
+        Array.from({ length: 12 }).map(() => (
+          <span class="font-display text-4xl uppercase mx-8 text-ink">
+            Matienzo · Cultura viva · Desde 2008 ·
+          </span>
+        ))
+      }
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-6 md:px-10 py-16 grid grid-cols-1 md:grid-cols-4 gap-10">
+    <div class="md:col-span-2">
+      <img src="/images/logo.png" alt="Matienzo" class="h-14 w-auto mb-6" />
+      <p class="text-paper/70 max-w-md leading-relaxed">{site.tagline}</p>
+      <p class="text-paper/50 text-sm mt-6">
+        {contact.address}<br />
+        {contact.neighborhood} · {contact.city}<br />
+        {contact.transport.subway}
+      </p>
+    </div>
+
+    <div>
+      <h4 class="text-sm uppercase tracking-widest text-magenta mb-4 font-body font-bold">Contacto</h4>
+      <ul class="space-y-2.5 text-paper/80 text-sm">
+        <li><a href={`mailto:${contact.emails.info}`} class="hover:text-paper transition">General · {contact.emails.info}</a></li>
+        <li><a href={`mailto:${contact.emails.shows}`} class="hover:text-paper transition">Shows · {contact.emails.shows}</a></li>
+        <li><a href={`mailto:${contact.emails.eventos}`} class="hover:text-paper transition">Eventos · {contact.emails.eventos}</a></li>
+        <li><a href={contact.whatsappUrl} target="_blank" rel="noopener" class="hover:text-paper transition">WhatsApp · {contact.phone}</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <h4 class="text-sm uppercase tracking-widest text-magenta mb-4 font-body font-bold">Seguinos</h4>
+      <ul class="space-y-2.5 text-paper/80 text-sm">
+        <li><a href={contact.social.instagram} target="_blank" rel="noopener" class="hover:text-paper transition">Instagram · @ccmatienzo</a></li>
+        <li><a href={contact.social.facebook} target="_blank" rel="noopener" class="hover:text-paper transition">Facebook</a></li>
+        <li><a href={contact.social.twitter} target="_blank" rel="noopener" class="hover:text-paper transition">X / Twitter</a></li>
+      </ul>
+      <h4 class="text-sm uppercase tracking-widest text-magenta mt-8 mb-4 font-body font-bold">Ayuda</h4>
+      <ul class="space-y-2.5 text-paper/80 text-sm">
+        <li><a href="/contacto#faq" class="hover:text-paper transition">Preguntas frecuentes</a></li>
+        <li><span class="text-paper/40">Términos · Privacidad · Reembolsos</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="border-t border-paper/10 px-6 md:px-10 py-6 text-paper/40 text-xs flex flex-col md:flex-row justify-between gap-2 items-start md:items-center">
+    <span>© {new Date().getFullYear()} Club Cultural Matienzo SRL</span>
+    <div class="flex items-center gap-4">
+      <a href="/admin" class="text-paper/40 hover:text-magenta transition-colors uppercase tracking-widest">
+        Admin <span class="text-[10px] text-paper/30">(demo)</span>
+      </a>
+      <span>Powered by <span class="text-paper/70">Passline</span></span>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,97 @@
+---
+const navItems = [
+  { href: "/", label: "Home" },
+  { href: "/programacion", label: "Programación" },
+  { href: "/el-espacio", label: "El Espacio" },
+  { href: "/tu-evento", label: "Tu Evento" },
+  { href: "/nosotros", label: "Nosotros" },
+  { href: "/contacto", label: "Contacto" },
+];
+
+const path = Astro.url.pathname;
+---
+
+<header
+  id="site-header"
+  class="fixed top-0 inset-x-0 z-50 transition-all duration-300"
+>
+  <div
+    class="mx-auto flex items-center justify-between px-6 md:px-10 py-4 md:py-5 transition-all duration-300"
+  >
+    <a href="/" class="flex items-center gap-3 group">
+      <img
+        src="/images/logo.png"
+        alt="Club Cultural Matienzo"
+        class="h-10 md:h-12 w-auto group-hover:rotate-[-2deg] transition-transform duration-300"
+      />
+    </a>
+
+    <nav class="hidden md:flex items-center gap-1">
+      {
+        navItems.map((item) => {
+          const active = path === item.href || (item.href !== "/" && path.startsWith(item.href));
+          return (
+            <a
+              href={item.href}
+              class:list={[
+                "px-4 py-2 text-sm uppercase tracking-wider font-medium transition-colors",
+                active ? "text-magenta" : "text-paper/80 hover:text-paper",
+              ]}
+            >
+              {item.label}
+            </a>
+          );
+        })
+      }
+    </nav>
+
+    <button
+      id="menu-toggle"
+      class="md:hidden flex flex-col gap-1.5 p-2"
+      aria-label="Abrir menú"
+    >
+      <span class="block w-6 h-0.5 bg-paper"></span>
+      <span class="block w-6 h-0.5 bg-paper"></span>
+      <span class="block w-6 h-0.5 bg-paper"></span>
+    </button>
+  </div>
+
+  <!-- Mobile drawer -->
+  <div
+    id="mobile-menu"
+    class="md:hidden absolute inset-x-0 top-full bg-ink/98 backdrop-blur-xl border-t border-paper/10 hidden"
+  >
+    <nav class="flex flex-col p-6 gap-1">
+      {
+        navItems.map((item) => (
+          <a
+            href={item.href}
+            class="py-3 text-2xl font-display uppercase tracking-tight text-paper hover:text-magenta transition-colors"
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+  </div>
+</header>
+
+<script>
+  const header = document.getElementById("site-header");
+  const onScroll = () => {
+    if (!header) return;
+    if (window.scrollY > 50) {
+      header.classList.add("bg-ink/85", "backdrop-blur-xl", "border-b", "border-paper/10");
+    } else {
+      header.classList.remove("bg-ink/85", "backdrop-blur-xl", "border-b", "border-paper/10");
+    }
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  const toggle = document.getElementById("menu-toggle");
+  const menu = document.getElementById("mobile-menu");
+  toggle?.addEventListener("click", () => {
+    menu?.classList.toggle("hidden");
+  });
+</script>

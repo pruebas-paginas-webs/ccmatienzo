@@ -1,0 +1,304 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Marquee from "../components/Marquee.astro";
+import EventCard from "../components/EventCard.astro";
+import { events, getTonight, eventCategories } from "../data/events";
+import { contact } from "../data/content";
+
+// Featured first (preserving date order), then non-featured by date
+const sorted = [...events].sort((a, b) => {
+  if (a.featured && !b.featured) return -1;
+  if (!a.featured && b.featured) return 1;
+  return a.date.localeCompare(b.date);
+});
+const tonight = sorted[0];
+const upcoming = sorted.slice(0, 8);
+---
+
+<Layout>
+  <!-- HERO -->
+  <section class="relative min-h-screen flex flex-col justify-end overflow-hidden">
+    <div class="absolute inset-0 z-0" data-parallax="0.4">
+      <img
+        src="/images/spaces/hero-banner.jpg"
+        alt=""
+        class="w-full h-[120%] object-cover scale-110"
+      />
+      <div class="absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-ink/40"></div>
+      <div class="absolute inset-0 bg-gradient-to-r from-ink/60 via-transparent to-transparent"></div>
+    </div>
+
+    <div class="relative z-10 px-6 md:px-12 pb-24 md:pb-32 pt-32 md:pt-40">
+      <p class="text-magenta uppercase tracking-[0.3em] text-xs md:text-sm mb-6 font-bold reveal">
+        Club Cultural Matienzo · Villa Crespo
+      </p>
+      <h1
+        class="font-display uppercase text-[16vw] md:text-[12vw] leading-[0.85] mb-8 max-w-6xl reveal"
+        style="letter-spacing: -0.04em"
+      >
+        Cultura<br />
+        <span class="text-magenta">en vivo.</span>
+      </h1>
+      <p class="text-paper/80 text-lg md:text-2xl max-w-2xl leading-relaxed mb-10 reveal">
+        Donde la música, la fiesta y la comunidad se encuentran. <br />
+        Más de 15 años haciendo escena.
+      </p>
+      <div class="flex flex-wrap gap-4 reveal">
+        <a
+          href="/programacion"
+          class="inline-flex items-center gap-3 bg-magenta text-ink px-8 py-4 font-bold uppercase tracking-wider hover:bg-neon transition-colors"
+        >
+          Ver agenda
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+            <path d="M5 12h14M13 5l7 7-7 7" />
+          </svg>
+        </a>
+        <a
+          href={contact.whatsappUrl}
+          target="_blank"
+          class="inline-flex items-center gap-3 border border-paper text-paper px-8 py-4 font-bold uppercase tracking-wider hover:bg-paper hover:text-ink transition-colors"
+        >
+          Reservar terraza
+        </a>
+      </div>
+    </div>
+
+    <div class="absolute bottom-6 right-6 md:right-12 z-10 hidden md:flex items-center gap-3 text-paper/50 text-xs uppercase tracking-widest">
+      <span>Scroll</span>
+      <span class="w-12 h-px bg-paper/30 block"></span>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <Marquee text="· Esta noche · Live · Esta noche · Live " variant="magenta" repeat={8} />
+
+  <!-- TONIGHT BAR (sticky) -->
+  <section id="tonight-bar" class="bg-ink border-b border-magenta/30 text-paper py-5 px-6 md:px-12 sticky top-0 z-30 hidden lg:flex">
+    <div class="max-w-7xl mx-auto w-full flex items-center justify-between gap-6">
+      <div class="flex items-center gap-4 min-w-0">
+        <span class="relative flex h-3 w-3 shrink-0">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-magenta opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-3 w-3 bg-magenta"></span>
+        </span>
+        <span class="uppercase tracking-widest text-xs font-bold text-magenta">Esta noche</span>
+        <span id="tonight-title" class="font-display uppercase text-xl truncate">{tonight.title}</span>
+        <span id="tonight-time" class="text-sm text-paper/60 shrink-0">· {tonight.time} hs</span>
+      </div>
+      <a
+        id="tonight-link"
+        href={tonight.ticketUrl}
+        target="_blank"
+        class="bg-magenta text-ink px-5 py-2 uppercase tracking-wider text-sm font-bold hover:bg-neon transition-colors shrink-0"
+      >
+        Comprar →
+      </a>
+    </div>
+  </section>
+
+  <!-- AGENDA HORIZONTAL -->
+  <section class="py-24 md:py-32 relative">
+    <div class="px-6 md:px-12 max-w-7xl mx-auto mb-12">
+      <div class="flex items-end justify-between flex-wrap gap-4">
+        <div>
+          <p class="text-magenta uppercase tracking-widest text-xs mb-3 font-bold reveal">Próximos eventos</p>
+          <h2 class="font-display uppercase text-6xl md:text-8xl reveal">
+            Lo que viene
+          </h2>
+        </div>
+        <a
+          href="/programacion"
+          class="text-paper/70 hover:text-paper text-sm uppercase tracking-widest border-b border-paper/30 hover:border-paper transition pb-1 reveal"
+        >
+          Ver agenda completa →
+        </a>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto pb-6 scroll-smooth no-scrollbar">
+      <div id="agenda-horizontal" class="flex gap-5 px-6 md:px-12">
+        {upcoming.map((event) => <EventCard event={event} size="md" />)}
+        <div class="min-w-[10px]"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATEGORIES STRIP -->
+  <section class="border-y border-paper/10 py-20 px-6 md:px-12 bg-stone-100/30">
+    <div class="max-w-7xl mx-auto">
+      <p class="text-magenta uppercase tracking-widest text-xs mb-6 font-bold reveal">Programación por género</p>
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-px bg-paper/10">
+        {
+          eventCategories.map((cat) => (
+            <a
+              href={`/programacion?cat=${encodeURIComponent(cat.name)}`}
+              data-cat-count={cat.name}
+              class="bg-ink hover:bg-magenta hover:text-ink p-6 md:p-8 transition-colors group"
+            >
+              <p data-cat-num class="text-5xl md:text-7xl font-display group-hover:scale-110 transition-transform origin-left">
+                {String(cat.count).padStart(2, "0")}
+              </p>
+              <p class="text-xs uppercase tracking-widest mt-2 text-paper/70 group-hover:text-ink">
+                {cat.name}
+              </p>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ESPACIOS -->
+  <section class="py-24 md:py-32 px-6 md:px-12">
+    <div class="max-w-7xl mx-auto">
+      <div class="mb-16">
+        <p class="text-magenta uppercase tracking-widest text-xs mb-3 font-bold reveal">El espacio</p>
+        <h2 class="font-display uppercase text-6xl md:text-8xl reveal">
+          1500 m² <br /><span class="text-stroke">de cultura</span>
+        </h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-paper/10">
+        <a href="/el-espacio#sala" class="group relative aspect-[4/5] overflow-hidden bg-ink reveal">
+          <img src="/images/spaces/espacio-interior.jpg" alt="Sala principal" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+          <div class="absolute inset-0 bg-gradient-to-t from-ink to-transparent"></div>
+          <div class="absolute bottom-6 left-6 right-6">
+            <p class="text-magenta text-xs uppercase tracking-widest font-bold mb-1">01</p>
+            <h3 class="font-display text-4xl uppercase">Sala</h3>
+            <p class="text-paper/70 text-sm mt-2">Capacidad 500. Sonido pro.</p>
+          </div>
+        </a>
+        <a href="/el-espacio#bar" class="group relative aspect-[4/5] overflow-hidden bg-ink reveal" style="transition-delay: 100ms">
+          <img src="/images/spaces/sirviendo-cerveza.jpg" alt="Bar" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+          <div class="absolute inset-0 bg-gradient-to-t from-ink to-transparent"></div>
+          <div class="absolute bottom-6 left-6 right-6">
+            <p class="text-magenta text-xs uppercase tracking-widest font-bold mb-1">02</p>
+            <h3 class="font-display text-4xl uppercase">Bar</h3>
+            <p class="text-paper/70 text-sm mt-2">Tragos de autor. Picadas.</p>
+          </div>
+        </a>
+        <a href="/el-espacio#terraza" class="group relative aspect-[4/5] overflow-hidden bg-ink reveal" style="transition-delay: 200ms">
+          <img src="/images/spaces/espacio-terraza.jpg" alt="Terraza" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+          <div class="absolute inset-0 bg-gradient-to-t from-ink to-transparent"></div>
+          <div class="absolute bottom-6 left-6 right-6">
+            <p class="text-magenta text-xs uppercase tracking-widest font-bold mb-1">03</p>
+            <h3 class="font-display text-4xl uppercase">Terraza</h3>
+            <p class="text-paper/70 text-sm mt-2">Aire libre. Ferias y noches.</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- TU EVENTO CTA -->
+  <section class="relative py-32 md:py-48 px-6 md:px-12 overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <img
+        src="/images/spaces/murales-interior.jpg"
+        alt=""
+        class="w-full h-full object-cover opacity-25"
+        data-parallax="0.3"
+      />
+      <div class="absolute inset-0 bg-gradient-to-r from-ink via-ink/80 to-ink/60"></div>
+    </div>
+    <div class="relative z-10 max-w-5xl mx-auto text-center">
+      <p class="text-magenta uppercase tracking-widest text-xs mb-6 font-bold reveal">Tu evento</p>
+      <h2 class="font-display uppercase text-5xl md:text-8xl mb-8 reveal leading-[0.9]">
+        Hacemos posible <br />tu evento <span class="text-magenta">soñado.</span>
+      </h2>
+      <p class="text-paper/70 text-lg max-w-2xl mx-auto mb-10 reveal">
+        Festejos, corporativos, producciones audiovisuales y ferias. 1500 m² adaptables a tu idea.
+      </p>
+      <a
+        href="/tu-evento"
+        class="inline-flex items-center gap-3 bg-paper text-ink px-8 py-4 font-bold uppercase tracking-wider hover:bg-magenta hover:text-ink transition-colors reveal"
+      >
+        Conocé los servicios
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+          <path d="M5 12h14M13 5l7 7-7 7" />
+        </svg>
+      </a>
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; }
+</style>
+
+<script>
+  // Lightweight parallax for [data-parallax]
+  const parallaxEls = document.querySelectorAll<HTMLElement>("[data-parallax]");
+  let ticking = false;
+  function update() {
+    parallaxEls.forEach((el) => {
+      const speed = parseFloat(el.dataset.parallax || "0.3");
+      const rect = el.getBoundingClientRect();
+      const offset = rect.top;
+      el.style.transform = `translate3d(0, ${-offset * speed * 0.2}px, 0)`;
+    });
+    ticking = false;
+  }
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (!ticking) {
+        requestAnimationFrame(update);
+        ticking = true;
+      }
+    },
+    { passive: true }
+  );
+  update();
+</script>
+
+<script>
+  // Hydrate from localStorage if admin has made changes
+  import { loadEvents, hasOverride, eventCardHTML } from "../lib/eventStore";
+  import { events as defaults } from "../data/events";
+
+  function hydrateHome() {
+    if (!hasOverride()) return;
+    const all = loadEvents(defaults);
+    // Featured first, then by date
+    const sorted = [...all].sort((a, b) => {
+      if (a.featured && !b.featured) return -1;
+      if (!a.featured && b.featured) return 1;
+      return a.date.localeCompare(b.date);
+    });
+    const evts = sorted;
+    const upcoming = sorted.slice(0, 8);
+
+    const agenda = document.getElementById("agenda-horizontal");
+    if (agenda && upcoming.length) {
+      agenda.innerHTML =
+        upcoming.map((e) => eventCardHTML(e, "md")).join("") +
+        '<div class="min-w-[10px]"></div>';
+    }
+
+    if (evts.length > 0) {
+      const t = evts[0];
+      const title = document.getElementById("tonight-title");
+      const time = document.getElementById("tonight-time");
+      const link = document.getElementById("tonight-link");
+      if (title) title.textContent = t.title;
+      if (time) time.textContent = "· " + t.time + " hs";
+      if (link) (link as HTMLAnchorElement).href = t.ticketUrl;
+    }
+
+    const counts: Record<string, number> = {};
+    evts.forEach((e) => {
+      counts[e.category] = (counts[e.category] || 0) + 1;
+    });
+    document.querySelectorAll<HTMLAnchorElement>("[data-cat-count]").forEach((el) => {
+      const cat = el.dataset.catCount || "";
+      const numEl = el.querySelector("[data-cat-num]");
+      if (numEl) numEl.textContent = String(counts[cat] || 0).padStart(2, "0");
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", hydrateHome);
+  } else {
+    hydrateHome();
+  }
+</script>

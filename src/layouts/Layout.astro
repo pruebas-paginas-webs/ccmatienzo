@@ -1,0 +1,88 @@
+---
+import "@fontsource/archivo-black/400.css";
+import "@fontsource/bebas-neue/400.css";
+import "@fontsource-variable/inter";
+import "../styles/global.css";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { site } from "../data/content";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description = site.description } = Astro.props;
+const fullTitle = title ? `${title} · ${site.shortName}` : `${site.name} · ${site.tagline}`;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <title>{fullTitle}</title>
+  </head>
+  <body class="bg-ink text-paper font-body antialiased">
+    <!-- Banner "Modo edición" (visible solo si hay overrides en localStorage) -->
+    <div id="edit-mode-banner" class="hidden fixed bottom-4 right-4 z-[60] bg-neon text-ink px-4 py-3 shadow-lg border border-ink/20 max-w-xs">
+      <div class="flex items-start gap-3">
+        <span class="font-display text-2xl leading-none">✎</span>
+        <div class="flex-1 min-w-0">
+          <p class="text-[10px] uppercase tracking-widest font-bold leading-none mb-1">Modo edición</p>
+          <p class="text-xs leading-tight mb-2">Estás viendo cambios del panel admin (solo en este navegador).</p>
+          <div class="flex gap-2 text-[11px]">
+            <a href="/admin" class="underline font-bold hover:text-magenta">Ir al admin</a>
+            <span class="text-ink/40">·</span>
+            <button id="reset-overrides" class="underline font-bold hover:text-magenta">Restaurar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <Header />
+    <main class="relative">
+      <slot />
+    </main>
+    <Footer />
+
+    <script>
+      // Reveal-on-scroll using IntersectionObserver (light, no GSAP needed for this)
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("is-visible");
+              io.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
+      );
+      document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+
+      // Show "Modo edición" banner if localStorage overrides exist
+      const showEditBanner = () => {
+        const banner = document.getElementById("edit-mode-banner");
+        const hasOverride = localStorage.getItem("matienzo-events-v1") !== null;
+        if (banner && hasOverride && !location.pathname.startsWith("/admin")) {
+          banner.classList.remove("hidden");
+        }
+      };
+      const resetBtn = document.getElementById("reset-overrides");
+      resetBtn?.addEventListener("click", () => {
+        if (confirm("¿Restaurar los eventos originales? Se perderán los cambios del admin.")) {
+          localStorage.removeItem("matienzo-events-v1");
+          location.reload();
+        }
+      });
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", showEditBanner);
+      } else {
+        showEditBanner();
+      }
+    </script>
+  </body>
+</html>

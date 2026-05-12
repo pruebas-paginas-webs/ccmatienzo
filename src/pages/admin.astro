@@ -1,0 +1,417 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { events as defaultEvents, eventCategories } from "../data/events";
+
+const eventsJson = JSON.stringify(defaultEvents);
+const categoriesJson = JSON.stringify(eventCategories.map((c) => c.name));
+---
+
+<Layout title="Admin">
+  <div id="admin-root" class="pt-32 md:pt-40 pb-20 px-6 md:px-12 min-h-screen">
+    <!-- LOGIN -->
+    <section id="login-screen" class="max-w-md mx-auto">
+      <div class="border border-paper/15 bg-stone-100/40 p-8 md:p-12">
+        <p class="text-magenta uppercase tracking-widest text-xs mb-3 font-bold">
+          Panel de Admin · Demo
+        </p>
+        <h1 class="font-display uppercase text-5xl md:text-6xl mb-3 leading-none">
+          Ingresá.
+        </h1>
+        <p class="text-paper/60 text-sm mb-8">
+          Ingresá el código provisorio para acceder al panel.
+        </p>
+
+        <form id="login-form" class="space-y-5">
+          <div>
+            <label class="text-paper/70 text-xs uppercase tracking-widest mb-2 block">Código</label>
+            <input
+              type="password"
+              id="login-code"
+              autocomplete="off"
+              class="w-full bg-ink border border-paper/30 px-4 py-3 text-paper focus:border-magenta focus:outline-none font-mono"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+          <p id="login-error" class="text-red-400 text-sm hidden">Código incorrecto.</p>
+          <button
+            type="submit"
+            class="w-full bg-magenta text-ink px-6 py-3 font-bold uppercase tracking-wider hover:bg-neon transition-colors"
+          >
+            Entrar →
+          </button>
+          <p class="text-paper/40 text-xs text-center">Código demo: <code class="text-paper/70">matienzo</code></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard-screen" class="hidden max-w-7xl mx-auto">
+      <header class="flex items-center justify-between mb-8 pb-6 border-b border-paper/15 flex-wrap gap-4">
+        <div>
+          <p class="text-magenta uppercase tracking-widest text-xs mb-2 font-bold">
+            Panel de Admin
+            <span class="ml-2 inline-block bg-magenta text-ink text-[10px] px-2 py-0.5">DEMO</span>
+          </p>
+          <h1 class="font-display uppercase text-4xl md:text-6xl leading-none">Eventos</h1>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button
+            id="btn-add"
+            class="bg-magenta text-ink px-5 py-2.5 font-bold uppercase tracking-wider text-sm hover:bg-neon transition"
+          >
+            + Nuevo evento
+          </button>
+          <button
+            id="btn-reset"
+            class="border border-paper/30 text-paper/80 px-5 py-2.5 font-bold uppercase tracking-wider text-sm hover:bg-paper/10 transition"
+            title="Restaurar eventos por defecto"
+          >
+            ↺ Restaurar
+          </button>
+          <button
+            id="btn-logout"
+            class="border border-paper/30 text-paper/80 px-5 py-2.5 font-bold uppercase tracking-wider text-sm hover:bg-paper/10 transition"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </header>
+
+      <!-- STATS -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-px bg-paper/10 mb-10">
+        <div class="bg-ink p-5">
+          <p class="text-magenta text-xs uppercase tracking-widest font-bold mb-1">Total</p>
+          <p class="font-display text-5xl" id="stat-total">0</p>
+        </div>
+        <div class="bg-ink p-5">
+          <p class="text-magenta text-xs uppercase tracking-widest font-bold mb-1">Recitales</p>
+          <p class="font-display text-5xl" id="stat-recitales">0</p>
+        </div>
+        <div class="bg-ink p-5">
+          <p class="text-magenta text-xs uppercase tracking-widest font-bold mb-1">Fiestas</p>
+          <p class="font-display text-5xl" id="stat-fiestas">0</p>
+        </div>
+        <div class="bg-ink p-5">
+          <p class="text-magenta text-xs uppercase tracking-widest font-bold mb-1">Otros</p>
+          <p class="font-display text-5xl" id="stat-otros">0</p>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="border border-paper/10 overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-stone-100/40 border-b border-paper/10">
+            <tr class="text-left text-paper/60 uppercase tracking-widest text-xs">
+              <th class="p-4 font-bold w-20"></th>
+              <th class="p-4 font-bold">Título</th>
+              <th class="p-4 font-bold">Categoría</th>
+              <th class="p-4 font-bold">Fecha</th>
+              <th class="p-4 font-bold">Hora</th>
+              <th class="p-4 font-bold text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="events-tbody" class="divide-y divide-paper/10"></tbody>
+        </table>
+      </div>
+
+      <p class="text-paper/40 text-xs mt-8 max-w-2xl">
+        Los cambios se guardan en tu navegador (localStorage) y se reflejan en la home y programación del sitio.
+        En la versión final, se guardarían en una base de datos central. Botón "Restaurar" vuelve a los eventos originales.
+      </p>
+    </section>
+  </div>
+
+  <!-- MODAL FORM -->
+  <div id="modal" class="hidden fixed inset-0 z-50 bg-ink/90 backdrop-blur-md flex items-start md:items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-ink border border-paper/20 max-w-2xl w-full p-6 md:p-10 my-8">
+      <div class="flex items-start justify-between mb-6">
+        <div>
+          <p class="text-magenta uppercase tracking-widest text-xs mb-2 font-bold" id="modal-eyebrow">Nuevo evento</p>
+          <h2 class="font-display uppercase text-3xl md:text-5xl leading-none">Editar</h2>
+        </div>
+        <button id="modal-close" class="text-paper/60 hover:text-paper text-3xl leading-none">×</button>
+      </div>
+
+      <form id="event-form" class="space-y-4">
+        <input type="hidden" id="f-id" />
+
+        <div>
+          <label class="text-paper/70 text-xs uppercase tracking-widest mb-1 block">Título</label>
+          <input id="f-title" required class="w-full bg-stone-100/30 border border-paper/30 px-3 py-2.5 text-paper focus:border-magenta focus:outline-none" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-paper/70 text-xs uppercase tracking-widest mb-1 block">Categoría</label>
+            <select id="f-category" class="w-full bg-stone-100/30 border border-paper/30 px-3 py-2.5 text-paper focus:border-magenta focus:outline-none">
+              <option>Recitales</option>
+              <option>Fiestas</option>
+              <option>Noche de Juegos</option>
+              <option>Feria</option>
+              <option>Audiovisual</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-paper/70 text-xs uppercase tracking-widest mb-1 block">Hora</label>
+            <input id="f-time" type="time" required class="w-full bg-stone-100/30 border border-paper/30 px-3 py-2.5 text-paper focus:border-magenta focus:outline-none" />
+          </div>
+        </div>
+
+        <div>
+          <label class="text-paper/70 text-xs uppercase tracking-widest mb-1 block">Fecha</label>
+          <input id="f-date" type="date" required class="w-full bg-stone-100/30 border border-paper/30 px-3 py-2.5 text-paper focus:border-magenta focus:outline-none" />
+        </div>
+
+        <div>
+          <label class="text-paper/70 text-xs uppercase tracking-widest mb-1 block">Descripción</label>
+          <textarea id="f-description" rows="3" class="w-full bg-stone-100/30 border border-paper/30 px-3 py-2.5 text-paper focus:border-magenta focus:outline-none resize-none"></textarea>
+        </div>
+
+        <div>
+          <label class="text-paper/70 text-xs uppercase tracking-widest mb-1 block">URL del banner (imagen)</label>
+          <input id="f-banner" required class="w-full bg-stone-100/30 border border-paper/30 px-3 py-2.5 text-paper focus:border-magenta focus:outline-none font-mono text-xs" />
+          <p class="text-paper/40 text-xs mt-1">Probá: <code class="text-paper/60">/images/events/pez-vs-matienzo.jpg</code> o cualquier URL de imagen.</p>
+        </div>
+
+        <div>
+          <label class="text-paper/70 text-xs uppercase tracking-widest mb-1 block">Link de Passline</label>
+          <input id="f-ticket" required class="w-full bg-stone-100/30 border border-paper/30 px-3 py-2.5 text-paper focus:border-magenta focus:outline-none font-mono text-xs" />
+        </div>
+
+        <label class="flex items-center gap-2 text-paper/80 text-sm">
+          <input id="f-featured" type="checkbox" class="accent-magenta" />
+          Destacado
+        </label>
+
+        <div class="flex gap-3 pt-4">
+          <button type="submit" class="flex-1 bg-magenta text-ink px-6 py-3 font-bold uppercase tracking-wider hover:bg-neon transition">
+            Guardar
+          </button>
+          <button type="button" id="modal-cancel" class="border border-paper/30 text-paper px-6 py-3 font-bold uppercase tracking-wider hover:bg-paper/10 transition">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</Layout>
+
+<script
+  define:vars={{
+    defaultsJSON: eventsJson,
+    categoriesJSON: categoriesJson,
+  }}
+>
+  // Inline imports replaced by dynamic typing — runtime only
+  const STORAGE_KEY = "matienzo-events-v1";
+  const SESSION_KEY = "matienzo-admin-session";
+  const VALID_CODE = "matienzo";
+
+  const defaults = JSON.parse(defaultsJSON);
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return defaults;
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : defaults;
+    } catch {
+      return defaults;
+    }
+  }
+  function save(arr) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  }
+  function clearStore() {
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  function escapeHtml(s) {
+    const div = document.createElement("div");
+    div.textContent = s == null ? "" : String(s);
+    return div.innerHTML;
+  }
+
+  function dateToLabel(isoDate) {
+    const d = new Date(isoDate + "T00:00:00");
+    const days = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+    const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+    return `${days[d.getDay()]} ${String(d.getDate()).padStart(2, "0")} ${months[d.getMonth()]}`;
+  }
+
+  // ---------- AUTH ----------
+  const loginScreen = document.getElementById("login-screen");
+  const dashboardScreen = document.getElementById("dashboard-screen");
+  const loginForm = document.getElementById("login-form");
+  const loginCode = document.getElementById("login-code");
+  const loginError = document.getElementById("login-error");
+
+  function showDashboard() {
+    loginScreen.classList.add("hidden");
+    dashboardScreen.classList.remove("hidden");
+    renderEvents();
+  }
+
+  function showLogin() {
+    loginScreen.classList.remove("hidden");
+    dashboardScreen.classList.add("hidden");
+  }
+
+  loginForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (loginCode.value.trim().toLowerCase() === VALID_CODE) {
+      sessionStorage.setItem(SESSION_KEY, "yes");
+      loginError.classList.add("hidden");
+      showDashboard();
+    } else {
+      loginError.classList.remove("hidden");
+      loginCode.value = "";
+    }
+  });
+
+  document.getElementById("btn-logout").addEventListener("click", () => {
+    sessionStorage.removeItem(SESSION_KEY);
+    showLogin();
+  });
+
+  // ---------- TABLE RENDER ----------
+  const tbody = document.getElementById("events-tbody");
+
+  function updateStats(evts) {
+    document.getElementById("stat-total").textContent = String(evts.length);
+    document.getElementById("stat-recitales").textContent = String(evts.filter((e) => e.category === "Recitales").length);
+    document.getElementById("stat-fiestas").textContent = String(evts.filter((e) => e.category === "Fiestas").length);
+    document.getElementById("stat-otros").textContent = String(evts.filter((e) => !["Recitales", "Fiestas"].includes(e.category)).length);
+  }
+
+  function renderEvents() {
+    const evts = load();
+    updateStats(evts);
+    tbody.innerHTML = evts
+      .map(
+        (ev) => `<tr class="hover:bg-stone-100/30 transition">
+        <td class="p-3"><img src="${escapeHtml(ev.banner)}" alt="" class="w-14 h-14 object-cover" onerror="this.style.opacity=0.2" /></td>
+        <td class="p-4">
+          <p class="font-display uppercase text-base leading-tight">${escapeHtml(ev.title)}</p>
+          ${ev.featured ? '<span class="text-[10px] text-magenta uppercase tracking-widest">★ Destacado</span>' : ""}
+        </td>
+        <td class="p-4 text-paper/70">
+          <span class="text-xs uppercase tracking-wider">${escapeHtml(ev.category)}</span>
+        </td>
+        <td class="p-4 text-paper/70 text-xs">${escapeHtml(ev.dateLabel || ev.date)}</td>
+        <td class="p-4 text-paper/70 text-xs font-mono">${escapeHtml(ev.time)}</td>
+        <td class="p-4 text-right">
+          <button data-edit="${escapeHtml(ev.id)}" class="text-paper/70 hover:text-magenta px-2 py-1 text-xs uppercase tracking-wider">Editar</button>
+          <button data-delete="${escapeHtml(ev.id)}" class="text-paper/70 hover:text-red-400 px-2 py-1 text-xs uppercase tracking-wider">Borrar</button>
+        </td>
+      </tr>`
+      )
+      .join("");
+
+    if (evts.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="p-12 text-center text-paper/40">No hay eventos. Hacé click en "+ Nuevo evento" para crear uno.</td></tr>`;
+    }
+  }
+
+  tbody.addEventListener("click", (e) => {
+    const target = e.target;
+    if (!(target instanceof HTMLElement)) return;
+    const editId = target.dataset.edit;
+    const deleteId = target.dataset.delete;
+    if (editId) openModal(editId);
+    if (deleteId && confirm("¿Seguro que querés borrar este evento?")) {
+      const evts = load().filter((ev) => ev.id !== deleteId);
+      save(evts);
+      renderEvents();
+    }
+  });
+
+  // ---------- MODAL / FORM ----------
+  const modal = document.getElementById("modal");
+  const modalEyebrow = document.getElementById("modal-eyebrow");
+  const form = document.getElementById("event-form");
+
+  function openModal(id) {
+    const evts = load();
+    let ev = id ? evts.find((e) => e.id === id) : null;
+    if (!ev) {
+      ev = {
+        id: "ev-" + Date.now(),
+        title: "",
+        category: "Recitales",
+        date: new Date().toISOString().slice(0, 10),
+        dateLabel: "",
+        time: "21:00",
+        banner: "/images/events/pez-vs-matienzo.jpg",
+        description: "",
+        ticketUrl: "https://www.passline.com/eventos/prueba-bauti",
+        featured: false,
+      };
+      modalEyebrow.textContent = "Nuevo evento";
+    } else {
+      modalEyebrow.textContent = "Editar evento";
+    }
+    document.getElementById("f-id").value = ev.id;
+    document.getElementById("f-title").value = ev.title;
+    document.getElementById("f-category").value = ev.category;
+    document.getElementById("f-date").value = ev.date;
+    document.getElementById("f-time").value = ev.time;
+    document.getElementById("f-description").value = ev.description;
+    document.getElementById("f-banner").value = ev.banner;
+    document.getElementById("f-ticket").value = ev.ticketUrl;
+    document.getElementById("f-featured").checked = !!ev.featured;
+    modal.classList.remove("hidden");
+  }
+
+  function closeModal() {
+    modal.classList.add("hidden");
+  }
+
+  document.getElementById("btn-add").addEventListener("click", () => openModal(null));
+  document.getElementById("modal-close").addEventListener("click", closeModal);
+  document.getElementById("modal-cancel").addEventListener("click", closeModal);
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const id = document.getElementById("f-id").value;
+    const date = document.getElementById("f-date").value;
+    const evts = load();
+    const idx = evts.findIndex((ev) => ev.id === id);
+    const updated = {
+      id,
+      title: document.getElementById("f-title").value.trim(),
+      category: document.getElementById("f-category").value,
+      date,
+      dateLabel: dateToLabel(date),
+      time: document.getElementById("f-time").value,
+      description: document.getElementById("f-description").value.trim(),
+      banner: document.getElementById("f-banner").value.trim(),
+      ticketUrl: document.getElementById("f-ticket").value.trim(),
+      featured: document.getElementById("f-featured").checked,
+    };
+    if (idx >= 0) evts[idx] = updated;
+    else evts.push(updated);
+    // Sort by date asc
+    evts.sort((a, b) => a.date.localeCompare(b.date));
+    save(evts);
+    renderEvents();
+    closeModal();
+  });
+
+  // ---------- RESTORE ----------
+  document.getElementById("btn-reset").addEventListener("click", () => {
+    if (confirm("¿Restaurar los eventos originales? Se perderán los cambios.")) {
+      clearStore();
+      renderEvents();
+    }
+  });
+
+  // Auto-login if session is active (must be last so all helpers are defined)
+  if (sessionStorage.getItem(SESSION_KEY) === "yes") {
+    showDashboard();
+  }
+</script>
